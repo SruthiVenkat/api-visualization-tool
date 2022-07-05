@@ -1,0 +1,90 @@
+.node text {
+  font-size: 10px;
+  font-family: "Helvetica";
+  stroke: none;
+  fill: grey;
+}
+
+.none {
+  stroke: #999;
+  stroke-opacity: 0.0;
+  display: none;
+}
+
+.link {
+  stroke: #999;
+  stroke-opacity: 0.6;
+}
+
+.field-link {
+  stroke-dasharray: "4";
+  stroke-opacity: 0.6;
+}
+
+.subtyping-link {
+  stroke-dasharray: "3 1";
+  stroke-opacity: 0.6;
+}
+
+.annotation-link {
+  stroke-dasharray: "2 1 2";
+  stroke-opacity: 0.6;
+}
+
+h3 {
+  color: #1ABC9C;
+  text-align: center;
+  font-style: italic;
+  font-size: 14px;
+  font-family: "Helvetica";
+  bottom:5%;
+  position: absolute;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+}
+
+.circLegend {
+
+}
+
+.textLegend {
+
+}
+
+.rcorner1 {
+  border-radius: 5px;
+  border: 1px solid black;//#73AD21;
+  padding: 20px; 
+  width: 15em;
+  height: 40px;  
+  float:right;
+  z-index:-999;
+  position: absolute;
+  right:5%;
+  font-family: 'Roboto','Calibri';
+}
+
+.rcorner2 {
+  border-radius: 5px;
+  border: 1px solid black;//#73AD21;
+  padding: 20px; 
+  width: 15em;
+  height: 50px;  
+  float:right;
+  z-index:-999;
+  position: absolute;
+  top:14%;
+  right:5%;
+  font-family: 'Roboto','Calibri';
+}
+
+body {
+  font-family: 'Roboto','Calibri';
+}
+
+.rectangle {
+  height: 1.5px;
+  width: 100px;
+  margin: 14px;
+}
