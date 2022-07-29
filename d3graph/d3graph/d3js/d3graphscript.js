@@ -34,7 +34,11 @@ function d3graphscript(config = {
         .text(graph.graphLbl);
   var legend = d3.select("body").append("div").attr("class", "rcorner1")
   var legendLines = legend.append("div")
-  legendLines.append('span').html('<svg width="70%" height="2"><rect rx="20" ry="20"  width="90%" height="10" style="fill:#A91F01;stroke-width:3;stroke:#A91F01" /></svg> static')
+  legendLines.append('span').html('<svg width="70%" height="2"><rect rx="20" ry="20"  width="90%" height="10" style="fill:#A91F01;stroke-width:3;stroke:#A91F01" /></svg> static').append("path")
+      .attr("d", "M0,-5L10,0L0,5 L10,0 L0, -5")
+      .style("stroke", "grey") // ARROWHEAD GREY
+      .style("opacity", "0.6")
+      .style("stroke-width", '1.5');
   legendLines.append('span').html('<svg width="70%" height="2"><rect rx="20" ry="20"  width="90%" height="10" style="fill:#625fad;stroke-width:3;stroke:#625fad" /></svg> dynamic')
   legendLines.append('span').html('<svg width="70%" height="2"><rect rx="20" ry="20"  width="90%" height="10" style="fill:#000000;stroke-width:3;stroke:#000000" /></svg> both')
 
@@ -44,6 +48,14 @@ function d3graphscript(config = {
   legendLines2.append('span').html('<svg viewBox="17 17.5 50 5" width="80%"><circle class="circLegend" r="2" stroke="#CAB2C8" stroke-width="1" fill="#FFFFFF" cx="20" cy="20"></circle></svg><span style="z-index: 2;/* right: 10%; */left: 30%;position: absolute;">client</span>')
   legendLines2.append('span').html('<svg viewBox="17 17.5 50 5" width="80%"><circle class="circLegend" r="2" stroke="#000000" stroke-width="1" fill="#CAB2C8" cx="20" cy="20"></circle></svg><span style="z-index: 2;/* right: 10%; */left: 30%;position: absolute;">library</span>')
   legendLines2.append('span').html('<svg viewBox="17 17.5 50 5" width="80%"><circle class="circLegend" r="2.2" stroke="#000000" stroke-width="0.1" fill="#CAB2C8" cx="20" cy="20"></circle></svg><span style="z-index: 2;/* right: 10%; */left: 30%;position: absolute;">dependency</span>')
+
+  var showLblCheckbox = d3.select("h3").append("div").style("margin", "1em");
+  showLblCheckbox.append("input")
+    .attr("type", "checkbox").attr("id", "showLblCheckbox").attr("name", "showLblCheckbox").attr("value", "Show Package Names")
+    .on('change', showLbls);
+  showLblCheckbox.append("label")
+    .attr("for", "showLblCheckbox").html('Show Package Names')
+
 
   var svg = d3.select("body").append("svg")
     .attr("width", width)
@@ -215,10 +227,20 @@ function d3graphscript(config = {
     return linkedByIndex[a.index + "," + b.index];
   }
 
+  function showLbls() {
+    if (d3.select("#showLblCheckbox").node().checked == true){
+      d3.selectAll("text:not(.textLegend)").text(function(o) {return o.node_hover});
+    } else {
+      d3.selectAll("text:not(.textLegend)").text("");
+    }
+  }
+
   function connectedNodes() {
     if (toggle == 0) {
       //Reduce the opacity of all but the neighbouring nodes
       d = d3.select(this).node().__data__;
+      console.log(node.text);
+      console.log(node.style);
       node.style("opacity", function(o) {
         return neighboring(d, o) | neighboring(o, d) ? 1 : 0.1;
       });
@@ -226,22 +248,14 @@ function d3graphscript(config = {
         return d.index == o.source.index | d.index == o.target.index ? 1 : 0.1;
       });
       
-      // Text in nodes
-      node.append("text")
-      .attr("dx", 10)
-      .attr("dy", ".55em")
-      .text(function(o) {return neighboring(d, o) | neighboring(o, d) ? o.node_hover : ''}) // NODE-TEXT  
-      //Reduce the op
+      
+      d3.selectAll("text:not(.textLegend)").text(function(o) {return neighboring(d, o) | neighboring(o, d) ? o.node_hover : ''}) // NODE-TEXT  */
       toggle = 1;
     } else {
       //Put them back to opacity=1
       node.style("opacity", 1);
       link.style("opacity", 1);
-      node.append("text")
-      .attr("dx", 0)
-      .attr("dy", 0)
-      .text(function(o) {return ''})
-      svg.selectAll("text:not(.textLegend)").remove();
+      d3.selectAll("text:not(.textLegend)").text(function(o) {return ''})
       toggle = 0;
     }
   }
@@ -277,4 +291,19 @@ function d3graphscript(config = {
     node.enter().insert("circle", ".cursor").attr("class", "node").attr("r", 5).call(force.drag);
     force.start();
   }
+
+  function arrow(p1,p2){
+    var h1=15 // line thickness
+    var h2=35 // arrow height
+    var w2=22 // arrow width
+    var deg = Math.atan2(p1.y - p2.y, p1.x - p2.x) * (180 / Math.PI);
+    var len = Math.sqrt(Math.pow(p1.y - p2.y,2)+Math.pow(p1.x - p2.x,2))
+    var arr = document.createElementNS(svgns,"path")
+    var d = `M${p1.x} ${p1.y-h1/2}v${h1}h${h2/2-len}v${(h2-h1)/2}l${-w2} ${-h2/2}l${w2} ${-h2/2}v${(h2-h1)/2}z`
+    arr.setAttribute("d",d)
+    arr.setAttribute("transform",`rotate(${deg} ${p1.x} ${p1.y})`)
+    arr.classList.add("arrow")
+    return arr
+  }
+
 }
