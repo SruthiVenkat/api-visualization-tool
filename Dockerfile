@@ -13,7 +13,7 @@ pip install sklearn && \
 pip install ismember && \
 pip install PyGithub
 
-COPY .. /
+COPY . /
 
 
 ENV M2_HOME=/usr/share/maven
