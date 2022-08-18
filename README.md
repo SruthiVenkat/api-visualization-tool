@@ -29,6 +29,6 @@ The command to run the tool and generate the graph without Docker is `python api
 
 The following are the commands to run the tool using Docker:
 
-```1. sudo docker build -t img_name .``` from within this repo.
+1. ```sudo docker build -t img_name .``` from within this repo.
 
-```2. sudo docker run -v /path/to/this/repo/api-visualization-tool:/api-visualization-tool img_name```
+2. ```sudo docker run -v /path/to/this/repo/api-visualization-tool:/api-visualization-tool img_name```
