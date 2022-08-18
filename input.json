@@ -1,6 +1,12 @@
 [
 	{
-		"artifact": "dataprocessor",
-		"type": "client"
+		"artifact": "fastjson",
+		"type": "library"
+	},
+	{
+		"type": "client",
+		"artifact": "ez-vcard",
+		"url": "https://github.com/mangstadt/ez-vcard.git",
+		"commit": "a73a6f9ad0b5183a7054b179ee96b2de3c19b455"
 	}
 ]

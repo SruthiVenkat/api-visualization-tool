@@ -9,9 +9,9 @@ import xml.etree.ElementTree as ET
 import json
 import copy
 
-def seeDirectory(dName, subModuleOf, repos):
-    res = []
-    subModuleOf = subModuleOf.replace("repos/", "")
+def seeDirectory(dName, subModuleOf):
+    res = list()
+    subModuleOf = subModuleOf.replace("projects/", "")
     dirName = dName
     if not os.path.isfile(dirName):
         isMavenSingleModuleDir = os.path.exists(os.path.join(dirName, 'pom.xml'))
@@ -22,25 +22,14 @@ def seeDirectory(dName, subModuleOf, repos):
             toReturn['generatedJarName'], artifact, toReturn['build'] = retVals[0], retVals[1], 'maven'
             toReturn['rootDir'] = ""
             toReturn['javaVersion'] = 8
-            tmpRepos = list()
-            for repo in repos:
-              if 'url' in repo.keys() and repo['url'].split("/")[-1] in toReturn['execDir']:
-                if not 'artifact' in repo.keys():
-                  repo['artifact'] = artifact
-              else:
-                  tmp = copy.deepcopy(repo)
-                  tmp['artifact'] = artifact
-                  if not tmp in tmpRepos and not tmp in repos:
-                    tmpRepos.append(tmp)
-              res.append(toReturn)
-            repos.extend(tmpRepos)
+            res.append(toReturn)
         # handle the gradle stuff and multimodules here
         if (os.path.exists(dirName)):
             for file in os.listdir(dirName):
                 if not os.path.isfile(os.path.join(dirName,file)):
                     #if its only directory
-                    res.extend(seeDirectory(os.path.join(dirName,file), dName.split("/")[-1]+"/", repos))
-    return [res, repos]
+                    res.extend(seeDirectory(os.path.join(dirName,file), dName.split("/")[-1]+"/"))
+    return res
 
 
 def getJarName(pomFile):

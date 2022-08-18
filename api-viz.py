@@ -1,6 +1,7 @@
 import fileinput
 import json
 import os
+import shutil
 import subprocess
 import pandas as pd
 import numpy as np
@@ -15,7 +16,7 @@ from community import community_louvain
 
 # using local, modified version of d3graph, hope PRs will be accepted soon - can then change to pip version
 import sys
-sys.path.insert(0, './d3graph')
+sys.path.insert(0, '/api-visualization-tool/d3graph')
 from d3graph import d3graph, vec2adjmat
 from d3graph.d3graph import adjmat2dict
 ###
@@ -73,29 +74,32 @@ def getPackagesToClassesMapping(fileName):
 	[packageToClassesMap['.'.join(eachClass.split('.')[:-1])].append(eachClass.split('.')[-1]) for classNames in list(tmpDf['Classes']) for eachClass in classNames.split(":") if isinstance(eachClass, str)]
 	return packageToClassesMap
 
-# get list of clients and library from input JSON
-def getRepos():
-	datasetFile = open('./input.json','r')
-	datasetMetadata = json.load(datasetFile)
+def grep(filepath, library):
+	res = []
+	with open(filepath) as f:
+		for line in f.readlines():
+			if library in line:
+				return True
+	return False
 
+# get list of clients and library from input JSON
+def cloneRepos(datasetMetadata):
 	try:
-		os.mkdir('./repos')
+		os.mkdir('/api-visualization-tool/projects')
 	except OSError as error:
-		print('Directory "repos" exists.')   
+		print('Directory "projects" exists.')   
 
 	for repo in datasetMetadata:
 		if 'url' in repo.keys():
 			project = Project(repo['url'])
 			try:
-				res=project.clone('./repos')
+				res=project.clone('/api-visualization-tool/projects')
 				project.checkout_commit(repo['commit'])
 			except CalledProcessError as error:
 				print('Directory exists.')   
-		
-	return datasetMetadata
 
 # create dataframe in the shape we want
-def getInteractionsDF(arrayTsvFiles):
+def getInteractionsDF(arrayTsvFiles, lib):
 	global pkgToCls
 	global pkgToClsLength
 	global sourceColToJars
@@ -111,8 +115,9 @@ def getInteractionsDF(arrayTsvFiles):
 			tmpDf = pd.read_csv(file, sep='\t', on_bad_lines='skip')
 			checkDf = tmpDf.applymap(lambda x : type(x).__name__).eq({'Declared Callee Method': 'str', 'Declared Callee Library': 'str', 'Actual Callee Method': 'str', 'Actual Callee Library': 'str', 'Caller Method': 'str', 'Caller Library': 'str', 'Count': 'int', 'Callee Visibility': 'str','Reflective': 'bool','DynamicProxy': 'bool','Label': 'str'})
 			tmpDf = tmpDf.drop(list(checkDf[checkDf.isin([False]).any(axis=1)].index))
+			tmpDf = tmpDf.loc[(tmpDf['Actual Callee Library'].str.contains(lib)) | (tmpDf['Declared Callee Library'].str.contains(lib)) | (tmpDf['Caller Library'].str.contains(lib))]
+			
 			for index, row in tmpDf.iterrows():
-				checkDf.iloc[index]
 				stat = 'both' if row['Declared Callee Method'] == row['Actual Callee Method'] else 'dynamic'
 				method1, klass1, pkg1, lib1 = getMethodName(row['Caller Method']), getClassName(row['Caller Method']), getPkgName(row['Caller Method']), getVersionlessLibName(row['Caller Library'])
 				method2, klass2, pkg2, lib2 = getMethodName(row['Actual Callee Method']), getClassName(row['Actual Callee Method']), getPkgName(row['Actual Callee Method']), getVersionlessLibName(row['Actual Callee Library'])
@@ -129,6 +134,8 @@ def getInteractionsDF(arrayTsvFiles):
 			tmpDf = pd.read_csv(file, sep='\t', on_bad_lines='skip')
 			checkDf = tmpDf.applymap(lambda x : type(x).__name__).eq({'Declared Callee Method': 'str', 'Declared Callee Library': 'str', 'Caller Method': 'str', 'Caller Library': 'str', 'Count': 'int', 'Callee Visibility': 'str', 'Label': 'str'})
 			tmpDf = tmpDf.drop(list(checkDf[checkDf.isin([False]).any(axis=1)].index))
+			tmpDf = tmpDf.loc[(tmpDf['Declared Callee Library'].str.contains(lib)) | (tmpDf['Caller Library'].str.contains(lib))]
+			
 			for index, row in tmpDf.iterrows():
 				method1, klass1, pkg1, lib1 = getMethodName(row['Caller Method']), getClassName(row['Caller Method']), getPkgName(row['Caller Method']), getVersionlessLibName(row['Caller Library'])
 				method2, klass2, pkg2, lib2 = getMethodName(row['Declared Callee Method']), getClassName(row['Declared Callee Method']), getPkgName(row['Declared Callee Method']), getVersionlessLibName(row['Declared Callee Library'])
@@ -142,6 +149,8 @@ def getInteractionsDF(arrayTsvFiles):
 			tmpDf = pd.read_csv(file, sep='\t', on_bad_lines='skip')
 			checkDf = tmpDf.applymap(lambda x : type(x).__name__).eq({'Class': 'str', 'Method': 'str', 'Field Name:Field Signature': 'str', 'Annotation': 'str', 'Annotated In Library': 'str', 'Annotation Visibility': 'str', 'Count': 'int', 'Annotation Library': 'str'})
 			tmpDf = tmpDf.drop(list(checkDf[checkDf.isin([False]).any(axis=1)].index))
+			tmpDf = tmpDf.loc[(tmpDf['Annotated In Library'].str.contains(lib)) | (tmpDf['Annotation Library'].str.contains(lib))]
+			
 			for index, row in tmpDf.iterrows():
 				annotated = row['Class'] if not row['Class'] == '-' else (row['Method'] if not row['Method'] == '-' else row['Field Name:Field Signature'])
 				method1, klass1, pkg1, lib1 = getMethodName(annotated), getClassName(annotated), getPkgName(annotated), getVersionlessLibName(row['Annotated In Library'])
@@ -154,6 +163,8 @@ def getInteractionsDF(arrayTsvFiles):
 			tmpDf = pd.read_csv(file, sep='\t', on_bad_lines='skip')
 			checkDf = tmpDf.applymap(lambda x : type(x).__name__).eq({'SubClass': 'str', 'Sub Library': 'str', 'Super Class/Interface': 'str', 'Super Class/Interface Visibility': 'str', 'Super Library': 'str', 'Count': 'int'})
 			tmpDf = tmpDf.drop(list(checkDf[checkDf.isin([False]).any(axis=1)].index))
+			tmpDf = tmpDf.loc[(tmpDf['Sub Library'].str.contains(lib)) | (tmpDf['Super Library'].str.contains(lib))]
+			
 			for index, row in tmpDf.iterrows():
 				method1, klass1, pkg1, lib1 = getMethodName(row['SubClass']), getClassName(row['SubClass']), getPkgName(row['SubClass']), getVersionlessLibName(row['Sub Library'])
 				method2, klass2, pkg2, lib2 = getMethodName(row['Super Class/Interface']), getClassName(row['Super Class/Interface']), getPkgName(row['Super Class/Interface']), getVersionlessLibName(row['Super Library'])
@@ -165,6 +176,8 @@ def getInteractionsDF(arrayTsvFiles):
 			tmpDf = pd.read_csv(file, sep='\t', on_bad_lines='skip')
 			checkDf = tmpDf.applymap(lambda x : type(x).__name__).eq({'Caller Class': 'str', 'Caller Library': 'str', 'Field Name': 'str', 'Declared Class': 'str', 'Actual Class': 'str', 'Field Signature': 'str', 'Count': 'int', 'Visibility': 'str','Reflective': 'bool','Static': 'bool','Field Library': 'str'})
 			tmpDf = tmpDf.drop(list(checkDf[checkDf.isin([False]).any(axis=1)].index))
+			tmpDf = tmpDf.loc[(tmpDf['Caller Library'].str.contains(lib)) | (tmpDf['Field Library'].str.contains(lib))]
+			
 			for index, row in tmpDf.iterrows():
 				method1, klass1, pkg1, lib1 = getMethodName(row['Caller Class']), getClassName(row['Caller Class']), getPkgName(row['Caller Class']), getVersionlessLibName(row['Caller Library'])
 				sourceColToJars[method1], sourceColToJars[klass1], sourceColToJars[pkg1] = lib1, lib1, lib1
@@ -191,6 +204,8 @@ def getInteractionsDF(arrayTsvFiles):
 def checkIfInEdgesEqual(G, key, otherKey):
 	if G.in_degree(key)==0 and G.in_degree(otherKey)==0:
 		return True
+	if not G.in_degree(key)==G.in_degree(otherKey):
+		return False
 	keyInEdgeSources = set()
 	otherKeyInEdgeSources = set()
 	for e in G.edges():
@@ -209,7 +224,7 @@ def getEquivalentNodes(G):
 	for eachEntry in adjList:
 		splits = eachEntry.split(' ')
 		if len(splits) > 1:
-			actualAdjList[splits[0]] = splits[1].split(' ')
+			actualAdjList[splits[0]] = splits[1:]
 		else:
 			actualAdjList[splits[0]] = list()
 
@@ -221,7 +236,7 @@ def getEquivalentNodes(G):
 			setToCreate.add(key)
 			for otherKey in actualAdjList.keys():
 				if otherKey != key:
-					if collections.Counter(actualAdjList[key]) == collections.Counter(actualAdjList[otherKey]) and G.in_degree(key)==G.in_degree(otherKey) and checkIfInEdgesEqual(G, key, otherKey):
+					if (G.in_degree(key)==G.in_degree(otherKey)==0 and G.out_degree(key)==G.out_degree(otherKey)==0) or (set(actualAdjList[key]) == set(actualAdjList[otherKey]) and checkIfInEdgesEqual(G, key, otherKey)):
 						setToCreate.add(otherKey)
 						listKeysRead.append(otherKey)
 			finalResultList.append(list(setToCreate))
@@ -236,8 +251,9 @@ def createGraph(sourceColumn, targetColumn, sourceClubColumn, targetClubColumn, 
 	# add unused pkgs
 	for pkg in pkgToCls.keys():
 		if not pkg in G.nodes:
-			G.add_node(pkg)
-			G.add_edge(pkg, list(pkgToCls.keys())[randrange(len(pkgToCls)-1)], Count=1, Static='none', Type='none')
+			if sourceColToJars[pkg].split(':')[-1] == library:
+				G.add_node(pkg)
+				G.add_edge(pkg, list(pkgToCls.keys())[randrange(len(pkgToCls)-1)], Count=1, Static='none', Type='none')
 	
 	# coalesce nodes
 	eqvNodes = getEquivalentNodes(G)
@@ -322,7 +338,7 @@ def createGraph(sourceColumn, targetColumn, sourceClubColumn, targetClubColumn, 
 	
 		
 	sizes = [2*int((G.nodes[node]['number'] - numMin)*(6 - 4)/(numMax-numMin) + 4) for node in G.nodes]
-
+	print(cluster_labels)
 	# fix downstream clusters to the left, project to the middle, upstream to the right
 	fixedPos = list()
 	nodeColors, nodeEdgeColors, nodeEdgeSizes = list(), list(), list()
@@ -382,9 +398,10 @@ def createGraph(sourceColumn, targetColumn, sourceClubColumn, targetClubColumn, 
 			elif typeAttr == 'annotation':
 				d3.edge_properties[edge]['style']='annotation-link'
 			
-	d3.show(filepath='./api-dataproc-fastjson.html', title='VizAPI', graphLbl="VizAPI - API Usage : "+"-".join([repo['artifact'] for repo in repos]))
+	d3.show(filepath='/api-visualization-tool/api-usage.html', title='VizAPI', graphLbl="VizAPI - API Usage : "+"-".join([repo['artifact'] for repo in repos]))
 
-def getDataTsvs(dir, repos):
+def getDataTsvs(dir, allClients, library):
+	global repos
 	tsvs = list()
 	repoArtifacts = [repo['artifact'] for repo in repos]
 	for file in os.listdir(dir):
@@ -393,8 +410,19 @@ def getDataTsvs(dir, repos):
 			if ':' in file and file.split(':')[1] in repoArtifacts:
 				tsvs.append(d)
 		else:
-			tsvs.extend(getDataTsvs(d, repos))
-	return tsvs
+			tsvs.extend(getDataTsvs(d, allClients, library))
+	if allClients:
+		clients = list()
+		for root, dirs, fnames in os.walk(dir):
+			for fname in fnames:
+				if fname.endswith('dynamic-invocations.tsv') and grep(os.path.join(root, fname), library):
+					artifact = root.split(':')[1]
+					if not artifact == library:
+						repos.append({'type': 'client', 'artifact':artifact})
+					for file in os.listdir(root):
+						clients.append(os.path.join(root, fname))
+		tsvs.extend(clients)
+	return list(set(tsvs))
 
 def dataExists(dir, repos):
 	repoArtifacts = [repo['artifact'] for repo in repos]
@@ -408,16 +436,40 @@ if __name__ == "__main__":
 	sourceColToJars = dict()
 	pkgToCls = dict()
 	pkgToClsLength = dict()
-	repos = list()
+	repos = json.load(open('/api-visualization-tool/input.json','r'))
 	
 	# get clients and library and run instrumentation on it - output tsvs
-	repos = getRepos()
-	retVals = seeDirectory('./repos', "", repos)
-	projList, repos = retVals[0], retVals[1]
-	createJson(projList)
-	if not dataExists('./repos/api-surface-data', repos):
-		subprocess.call(['java', '-jar', './dependencies/libs-info-project-runner-1.0-SNAPSHOT-jar-with-dependencies.jar'])
-	tsvs = getDataTsvs('./repos/api-surface-data', repos)
-	interactionsDf = getInteractionsDF(tsvs)
+	cloneRepos(repos)
+	projList = seeDirectory('/api-visualization-tool/projects', "")
+	
+	# check if data already exists in apis-data directory
+	repoArtifacts = [repo['artifact'] for repo in repos]
+	for file in os.listdir('/api-visualization-tool/apis-data'):
+		if ':' in file and (file.split(':')[1] in repoArtifacts):
+			projList = [proj for proj in projList if proj['execDir']!=file.split(':')[1]]
+	
+	if len(projList) > 0:
+		createJson(projList)
+		subprocess.call(['java', '-jar', '/api-visualization-tool/dependencies/libs-info-project-runner-1.0-SNAPSHOT-jar-with-dependencies.jar'])
+
+		# move results to where we want
+		source_dir = '/api-visualization-tool/projects/api-surface-data'
+		target_dir = '/api-visualization-tool/apis-data'
+		file_names = os.listdir(source_dir)
+		for file_name in file_names:
+			shutil.move(os.path.join(source_dir, file_name), os.path.join(target_dir, file_name))
+	
+	library = [repo['artifact'] for repo in repos if repo['type']=='library']
+	if library:
+		library = library[0]
+		if len(repos)==1:
+			allClients = True
+		else:
+			allClients = False
+	else:
+		library = ''
+		
+	tsvs = getDataTsvs('/api-visualization-tool/apis-data', allClients, library)
+	interactionsDf = getInteractionsDF(tsvs, library)
 	createGraph("SourceJar","TargetJar","SourcePackage","TargetPackage", interactionsDf)
 	
