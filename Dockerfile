@@ -31,4 +31,4 @@ RUN mkdir /root/.m2 && mkdir /root/.m2/repository && echo \
     </settings>" \
     > /root/.m2/settings.xml 
 
-CMD python3 api-viz.py
+CMD cd /api-visualization-tool && mkdir projects && cd projects && mkdir api-surface-data && cd /api-visualization-tool && python3 api-viz.py
