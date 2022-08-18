@@ -86,8 +86,10 @@ def grep(filepath, library):
 def cloneRepos(datasetMetadata):
 	try:
 		os.mkdir('/api-visualization-tool/projects')
+		os.mkdir('/api-visualization-tool/apis-data')
+		os.mkdir('/api-visualization-tool/projects/api-surface-data')
 	except OSError as error:
-		print('Directory "projects" exists.')   
+		print('Directory exists.')   
 
 	for repo in datasetMetadata:
 		if 'url' in repo.keys():
