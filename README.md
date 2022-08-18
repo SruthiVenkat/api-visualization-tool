@@ -28,5 +28,7 @@ The final graph is generated with the name `api-usage.html`.
 The command to run the tool and generate the graph without Docker is `python api-viz.py`. In this case, some Python libraries need to be installed and all paths starting with `/api-visualization-tool` need to be modified to point to this repo.
 
 The following are the commands to run the tool using Docker:
+
 ```1. sudo docker build -t img_name .``` from within this repo.
+
 ```2. sudo docker run -v /path/to/this/repo/api-visualization-tool:/api-visualization-tool img_name```
