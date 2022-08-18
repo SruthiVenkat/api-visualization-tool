@@ -67,7 +67,7 @@ def getJarName(pomFile):
 
 def createJson(projectListDict):
     #will keep getting rewritten, make it 'a' if need it to be appended
-    fileHandle = open(os.path.join(os.getcwd(),'repos','projects-list.json'),'w+')
+    fileHandle = open(os.path.join(os.getcwd(),'projects','projects-list.json'),'w+')
     fileHandle.write(json.dumps(projectListDict,indent=4))
     fileHandle.write('\n')
     fileHandle.close()
