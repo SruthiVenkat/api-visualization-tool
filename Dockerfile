@@ -11,8 +11,7 @@ pip install python-louvain && \
 pip install community && \
 pip install sklearn && \
 pip install ismember && \
-pip install PyGithub && \
-pip install -U jinja2==2.11.3
+pip install PyGithub
 
 COPY . /
 
@@ -31,4 +30,4 @@ RUN mkdir /root/.m2 && mkdir /root/.m2/repository && echo \
     </settings>" \
     > /root/.m2/settings.xml 
 
-CMD cd /api-visualization-tool && mkdir projects && cd projects && mkdir api-surface-data && cd /api-visualization-tool && python3 api-viz.py
+CMD cd /api-visualization-tool && mkdir -p projects && cd projects && mkdir -p api-surface-data && cd /api-visualization-tool && python3 api-viz.py
