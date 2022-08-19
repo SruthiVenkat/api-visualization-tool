@@ -1,9 +1,5 @@
 [
 	{
-		"artifact": "fastjson",
-		"type": "library"
-	},
-	{
 		"type": "client",
 		"artifact": "ez-vcard",
 		"url": "https://github.com/mangstadt/ez-vcard.git",
