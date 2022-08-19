@@ -17,6 +17,16 @@ or
   "type": "client" or "library"
 }
 ```
+
+An example input is present in `input.json`. Another example is as follows:
+```
+{
+		"artifact": "fastjson",
+		"type": "library"
+}
+```
+
+
 Our existing data can be found [here](https://zenodo.org/record/6951140). The directory `apis-data` needs to be copied to the root of this repository. The size of the data is around 2.6 GB.
 
 If URLs and commit IDs are not provided as input, it is assumed that the data for the project already exists in `apis-data`. If the data does not exist, then both "url" and "commit" needs to be provided for the project. If "url" and "commit" are provided, then the repository is cloned into `./projects`, our instrumentation tool is run for that project and the data is generated in `./repos/api-surface-data`. 
