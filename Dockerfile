@@ -12,7 +12,8 @@ pip install community && \
 pip install sklearn && \
 pip install ismember && \
 pip install PyGithub && \
-pip install d3graph
+pip install d3graph && \
+pip install Jinja2==2.11.3
 
 COPY . /
 
