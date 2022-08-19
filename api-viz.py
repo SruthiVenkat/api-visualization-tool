@@ -470,6 +470,7 @@ if __name__ == "__main__":
 			allClients = False
 	else:
 		library = ''
+		allClients = False
 		
 	tsvs = getDataTsvs('/api-visualization-tool/apis-data', allClients, library)
 	interactionsDf = getInteractionsDF(tsvs, library)
