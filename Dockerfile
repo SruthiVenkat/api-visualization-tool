@@ -11,7 +11,8 @@ pip install python-louvain && \
 pip install community && \
 pip install sklearn && \
 pip install ismember && \
-pip install PyGithub
+pip install PyGithub && \
+pip install d3graph
 
 COPY . /
 
