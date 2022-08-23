@@ -44,3 +44,27 @@ The following are the commands to run the tool using Docker:
 2. ```docker run -v /path/to/this/repo/api-visualization-tool:/api-visualization-tool img_name``` The path before the `:` in the command is your local path to the repo. The path after the `:` in the command is the path in the container, which is `/api-visualization-tool`.
 
 The size of the Docker image is around 4.1 GB.
+
+The following are the input.json contents needed to reproduce the graphs [here](https://sruthivenkat.github.io/VizAPI-graph/).
+1. Graph 1 ```
+[{
+		"artifact": "dataprocessor",
+		"type": "client"
+}]
+```
+2. Graph 2 ```
+[
+	{
+			"artifact": "fastjson",
+			"type": "library"
+	},
+	{
+			"artifact": "ez-vcard",
+			"type": "client"
+	},
+	{
+			"artifact": "JsoupXpath",
+			"type": "client"
+	}
+]
+```
