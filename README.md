@@ -46,13 +46,15 @@ The following are the commands to run the tool using Docker:
 The size of the Docker image is around 4.1 GB.
 
 The following are the input.json contents needed to reproduce the graphs [here](https://sruthivenkat.github.io/VizAPI-graph/).
-1. Graph 1 ```
+1. Graph 1 
+```
 [{
 		"artifact": "dataprocessor",
 		"type": "client"
 }]
 ```
-2. Graph 2 ```
+2. Graph 2 
+```
 [
 	{
 			"artifact": "fastjson",
