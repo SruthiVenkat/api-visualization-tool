@@ -57,7 +57,7 @@ The following are the input.json contents needed to reproduce the graphs [here](
 ```
 [
 	{
-			"artifact": "fastjson",
+			"artifact": "jsoup",
 			"type": "library"
 	},
 	{
