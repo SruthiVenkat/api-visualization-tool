@@ -100,6 +100,12 @@ def cloneRepos(datasetMetadata):
 			except CalledProcessError as error:
 				print('Directory exists.')   
 
+def filterTsvRow(x):
+	for repo in repoArtifacts:
+		if repo in x:
+			return True
+	return False
+
 # create dataframe in the shape we want
 def getInteractionsDF(arrayTsvFiles, lib):
 	global pkgToCls
@@ -117,7 +123,7 @@ def getInteractionsDF(arrayTsvFiles, lib):
 			tmpDf = pd.read_csv(file, sep='\t', on_bad_lines='skip')
 			checkDf = tmpDf.applymap(lambda x : type(x).__name__).eq({'Declared Callee Method': 'str', 'Declared Callee Library': 'str', 'Actual Callee Method': 'str', 'Actual Callee Library': 'str', 'Caller Method': 'str', 'Caller Library': 'str', 'Count': 'int', 'Callee Visibility': 'str','Reflective': 'bool','DynamicProxy': 'bool','Label': 'str'})
 			tmpDf = tmpDf.drop(list(checkDf[checkDf.isin([False]).any(axis=1)].index))
-			tmpDf = tmpDf.loc[(tmpDf['Actual Callee Library'].str.contains(lib)) | (tmpDf['Declared Callee Library'].str.contains(lib)) | (tmpDf['Caller Library'].str.contains(lib))]
+			tmpDf = tmpDf.loc[(tmpDf['Actual Callee Library'].apply(filterTsvRow)) | (tmpDf['Declared Callee Library'].apply(filterTsvRow)) | (tmpDf['Caller Library'].apply(filterTsvRow))]
 			
 			for index, row in tmpDf.iterrows():
 				stat = 'both' if row['Declared Callee Method'] == row['Actual Callee Method'] else 'dynamic'
@@ -136,7 +142,7 @@ def getInteractionsDF(arrayTsvFiles, lib):
 			tmpDf = pd.read_csv(file, sep='\t', on_bad_lines='skip')
 			checkDf = tmpDf.applymap(lambda x : type(x).__name__).eq({'Declared Callee Method': 'str', 'Declared Callee Library': 'str', 'Caller Method': 'str', 'Caller Library': 'str', 'Count': 'int', 'Callee Visibility': 'str', 'Label': 'str'})
 			tmpDf = tmpDf.drop(list(checkDf[checkDf.isin([False]).any(axis=1)].index))
-			tmpDf = tmpDf.loc[(tmpDf['Declared Callee Library'].str.contains(lib)) | (tmpDf['Caller Library'].str.contains(lib))]
+			tmpDf = tmpDf.loc[(tmpDf['Declared Callee Library'].apply(filterTsvRow)) | (tmpDf['Caller Library'].apply(filterTsvRow))]
 			
 			for index, row in tmpDf.iterrows():
 				method1, klass1, pkg1, lib1 = getMethodName(row['Caller Method']), getClassName(row['Caller Method']), getPkgName(row['Caller Method']), getVersionlessLibName(row['Caller Library'])
@@ -151,7 +157,7 @@ def getInteractionsDF(arrayTsvFiles, lib):
 			tmpDf = pd.read_csv(file, sep='\t', on_bad_lines='skip')
 			checkDf = tmpDf.applymap(lambda x : type(x).__name__).eq({'Class': 'str', 'Method': 'str', 'Field Name:Field Signature': 'str', 'Annotation': 'str', 'Annotated In Library': 'str', 'Annotation Visibility': 'str', 'Count': 'int', 'Annotation Library': 'str'})
 			tmpDf = tmpDf.drop(list(checkDf[checkDf.isin([False]).any(axis=1)].index))
-			tmpDf = tmpDf.loc[(tmpDf['Annotated In Library'].str.contains(lib)) | (tmpDf['Annotation Library'].str.contains(lib))]
+			tmpDf = tmpDf.loc[(tmpDf['Annotated In Library'].apply(filterTsvRow)) | (tmpDf['Annotation Library'].apply(filterTsvRow))]
 			
 			for index, row in tmpDf.iterrows():
 				annotated = row['Class'] if not row['Class'] == '-' else (row['Method'] if not row['Method'] == '-' else row['Field Name:Field Signature'])
@@ -165,7 +171,7 @@ def getInteractionsDF(arrayTsvFiles, lib):
 			tmpDf = pd.read_csv(file, sep='\t', on_bad_lines='skip')
 			checkDf = tmpDf.applymap(lambda x : type(x).__name__).eq({'SubClass': 'str', 'Sub Library': 'str', 'Super Class/Interface': 'str', 'Super Class/Interface Visibility': 'str', 'Super Library': 'str', 'Count': 'int'})
 			tmpDf = tmpDf.drop(list(checkDf[checkDf.isin([False]).any(axis=1)].index))
-			tmpDf = tmpDf.loc[(tmpDf['Sub Library'].str.contains(lib)) | (tmpDf['Super Library'].str.contains(lib))]
+			tmpDf = tmpDf.loc[(tmpDf['Sub Library'].apply(filterTsvRow)) | (tmpDf['Super Library'].apply(filterTsvRow))]
 			
 			for index, row in tmpDf.iterrows():
 				method1, klass1, pkg1, lib1 = getMethodName(row['SubClass']), getClassName(row['SubClass']), getPkgName(row['SubClass']), getVersionlessLibName(row['Sub Library'])
@@ -176,9 +182,11 @@ def getInteractionsDF(arrayTsvFiles, lib):
 				df = df.append(newRow, ignore_index = True)
 		elif file.endswith("fields.tsv"):
 			tmpDf = pd.read_csv(file, sep='\t', on_bad_lines='skip')
+			if not 'Caller Class' in tmpDf.columns:
+				continue
 			checkDf = tmpDf.applymap(lambda x : type(x).__name__).eq({'Caller Class': 'str', 'Caller Library': 'str', 'Field Name': 'str', 'Declared Class': 'str', 'Actual Class': 'str', 'Field Signature': 'str', 'Count': 'int', 'Visibility': 'str','Reflective': 'bool','Static': 'bool','Field Library': 'str'})
 			tmpDf = tmpDf.drop(list(checkDf[checkDf.isin([False]).any(axis=1)].index))
-			tmpDf = tmpDf.loc[(tmpDf['Caller Library'].str.contains(lib)) | (tmpDf['Field Library'].str.contains(lib))]
+			tmpDf = tmpDf.loc[(tmpDf['Caller Library'].apply(filterTsvRow)) | (tmpDf['Field Library'].apply(filterTsvRow))]
 			
 			for index, row in tmpDf.iterrows():
 				method1, klass1, pkg1, lib1 = getMethodName(row['Caller Class']), getClassName(row['Caller Class']), getPkgName(row['Caller Class']), getVersionlessLibName(row['Caller Library'])
@@ -446,10 +454,12 @@ if __name__ == "__main__":
 	
 	# check if data already exists in apis-data directory
 	repoArtifacts = [repo['artifact'] for repo in repos]
+	projList = [proj for proj in projList if proj['execDir'] in repoArtifacts]
+	print(projList)
 	for file in os.listdir('/api-visualization-tool/apis-data'):
 		if ':' in file and (file.split(':')[1] in repoArtifacts):
 			projList = [proj for proj in projList if proj['execDir']!=file.split(':')[1]]
-	
+	print(projList)
 	if len(projList) > 0:
 		createJson(projList)
 		subprocess.call(['java', '-jar', '/api-visualization-tool/dependencies/libs-info-project-runner-1.0-SNAPSHOT-jar-with-dependencies.jar'])

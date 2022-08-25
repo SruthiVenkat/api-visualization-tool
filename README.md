@@ -53,7 +53,7 @@ The following are the input.json contents needed to reproduce the graphs [here](
 		"type": "client"
 }]
 ```
-2. Graph 2 
+2. Graph 2 (This graph looks a little different since we pushed some code to not display irrelevant nodes)
 ```
 [
 	{
