@@ -46,7 +46,6 @@ The following are the commands to run the tool using Docker:
 Disclaimers:
 1. The size of the Docker image is around 4.1 GB.
 2. Graphs with multiple data points takes time to be generated.
-3. There are multiple Pandas Future warnings.
 
 The following are the input.json contents needed to reproduce the graphs [here](https://sruthivenkat.github.io/VizAPI-graph/).
 1. Graph 1 
