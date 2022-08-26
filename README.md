@@ -35,7 +35,7 @@ Note: If `input.json` contains only one object of type "library", then VizAPI se
 
 The final graph is generated with the name `api-usage.html`.
 
-The command to run the tool and generate the graph without Docker is `python api-viz.py`. In this case, some Python libraries (pandas, jupyterlab_server, networkx, colourmap, python-louvain, sklearn, ismember, d3graph, PyGithub)  need to be installed. All paths starting with `/api-visualization-tool` need to be modified to point to this repo, in the files `api-viz.py` and `config/config.properties`.
+The command to run the tool and generate the graph without Docker is `python api-viz.py`. In this case, some Python libraries (pandas, jupyterlab_server, networkx, colourmap, python-louvain, sklearn, ismember, d3graph, PyGithub)  need to be installed. When running without Docker, all paths starting with `/api-visualization-tool` need to be modified to point to this repo, in the files `api-viz.py` and `config/config.properties`. When running with Docker, the paths need to be as they are, i.e., starting with `/api-visualization-tool`.
 
 The following are the commands to run the tool using Docker:
 
