@@ -13,6 +13,8 @@ import collections
 import colourmap as cm
 import functools as ft
 from community import community_louvain
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
 
 # using local, modified version of d3graph, hope PRs will be accepted soon - can then change to pip version
 import sys
